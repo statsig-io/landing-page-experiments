@@ -1,6 +1,6 @@
 {
   "name": "landing-page-experiments",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Statsig helps run landing page experiments by redirecting users to two or more landing pages based on an ABn Test.",
   "main": "dist/index.js",
   "scripts": {
