@@ -1,4 +1,4 @@
-export default class StatsigABHelper {
+export default class {
   static getCookie(name: string) {
     const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
     if (match) {
