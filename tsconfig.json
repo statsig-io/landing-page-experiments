@@ -1,10 +1,25 @@
 {
   "compilerOptions": {
-    "esModuleInterop": true,
-    "target": "es6",
-    "moduleResolution": "node",
-    "sourceMap": true,
+    "target": "es5",
+    "module": "commonjs",
+    "strict": true,
     "outDir": "dist",
+    "sourceMap": false,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "checkJs": false,
+    "declaration": false,
+    "skipLibCheck": true,
+    "moduleResolution": "node"
   },
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "typings",
+    "src/__tests__/*",
+    "src/utils/__tests__/*",
+    "dist",
+    "build"
+  ],
   "lib": ["es2015"]
 }
