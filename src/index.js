@@ -1,21 +1,25 @@
 window["StatsigABHelper"] = window["StatsigABHelper"] || {
-  getCookie: function(name) {
-    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    if (match) {
-      return match[2];
+  addStatsigSdk: function(apiKey, nonce) {
+    const script = document.createElement('script');
+    if (nonce) {
+      script.nonce = nonce;
     }
-  },
-
-  setCookie: function(name, value) {
-    document.cookie = `${name}=${value}; max-age=31536000; path=/`;
+    script.src = 'https://cdn.jsdelivr.net/npm/statsig-js';
+    script.addEventListener('load', () => {
+      StatsigABHelper._sdkLoaded = true;
+      StatsigABHelper.setupStatsigSdk(apiKey);
+    });
+    document.head.appendChild(script);
   },
 
   getStableID: function() {
-    const key = 'statsig_stable_id';
-    let sid = this.getCookie(key);
+    const key = 'STATSIG_LOCAL_STORAGE_STABLE_ID';
+    let sid = window.localStorage ? window.localStorage.getItem(key) : null;
     if (!sid) {
-      sid = Date.now().toString(36) + Math.random().toString(36).substring(2);
-      this.setCookie(key, sid);
+      sid = crypto.randomUUID();
+      if (window.localStorage) {
+        window.localStorage.setItem(key, sid);
+      }
     }
     return sid;
   },
@@ -44,22 +48,12 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
     }
   },
 
-  redirectToUrl: function(url) {
-    const currentUrl = new URL(window.location.href);
-    const newUrl = new URL(url, window.location.href);
-    if (currentUrl.pathname == newUrl.pathname) {
-      StatsigABHelper.resetBody();
-      return;
-    }
-    window.location.replace(url);
-  },
-
-  performRedirect: function(apiKey, experimentId) {
+  performRedirect: function(apiKey, experimentId, nonce) {
     this.getExperimentConfig(apiKey, experimentId)
       .then(config => {
         const url = config?.value?.page_url;
         if (url) {
-          this.redirectToUrl(url);
+          this.redirectToUrl(apiKey, url, nonce);
           return;
         }
       })
@@ -71,12 +65,36 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
       });      
   },
 
+  redirectToUrl: function(apiKey, url) {
+    const currentUrl = new URL(window.location.href);
+    const newUrl = new URL(url, window.location.href);
+    if (currentUrl.pathname === newUrl) {
+      StatsigABHelper._redirectFinished = true;
+      StatsigABHelper.resetBody();
+      StatsigABHelper.setupStatsigSdk(apiKey);
+      return;
+    }
+    window.location.replace(url);
+  },
+
   resetBody: function() {
     const sbpd = document.getElementById('__sbpd');
     if (sbpd) {
       sbpd.parentElement.removeChild(sbpd);
     }
-  }
+  },
+
+  setupStatsigSdk: function(apiKey) {
+    if (!window['statsig']) {
+      return;
+    }
+    if (!StatsigABHelper._redirectFinished || !StatsigABHelper._sdkLoaded) {
+      return;
+    }
+    if (!window.statsig.instance) {
+      statsig.initialize(apiKey, {});
+    }
+  },
 }
 
 if (document.currentScript && document.currentScript.src) {
@@ -84,7 +102,8 @@ if (document.currentScript && document.currentScript.src) {
   const apiKey = url.searchParams.get('apikey');
   const expId = url.searchParams.get('expid');
   if (apiKey && expId) {
-    document.write('<style id="__sbpd">body { display: none; }</style>');
+    document.write('<style id="__sbpd">body { display: none; }</style>\n');
+    StatsigABHelper.addStatsigSdk(apiKey, document.currentScript.nonce);
     StatsigABHelper.performRedirect(apiKey, expId);
   }
 }
