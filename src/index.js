@@ -68,7 +68,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
   redirectToUrl: function(apiKey, url) {
     const currentUrl = new URL(window.location.href);
     const newUrl = new URL(url, window.location.href);
-    if (currentUrl.pathname === newUrl) {
+    if (currentUrl.pathname === newUrl.pathname) {
       StatsigABHelper._redirectFinished = true;
       StatsigABHelper.resetBody();
       StatsigABHelper.setupStatsigSdk(apiKey);
