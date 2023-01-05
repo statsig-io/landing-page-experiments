@@ -34,7 +34,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
       },
       body: JSON.stringify({
         user: {
-          userId: sid,
+          userID: sid,
           customIDs: {
             stableID: sid,
           }
