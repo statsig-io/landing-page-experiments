@@ -55,6 +55,9 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
         if (url) {
           this.redirectToUrl(apiKey, url, nonce);
           return;
+        } else {
+          // Could be in pre-start mode
+          StatsigABHelper.resetBody();
         }
       })
       .catch((reason) => {
