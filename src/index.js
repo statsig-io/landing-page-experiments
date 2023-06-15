@@ -1,5 +1,5 @@
-STATSIG_NO_REDIR_KEY = '_stsgnoredir';
 window["StatsigABHelper"] = window["StatsigABHelper"] || {
+  _redirKey: '_stsgnoredir',
   addStatsigSdk: function(apiKey, nonce) {
     const script = document.createElement('script');
     if (nonce) {
@@ -58,7 +58,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
     const currentUrl = new URL(window.location.href);
 
     // Force no redir
-    if (currentUrl.searchParams.get(STATSIG_NO_REDIR_KEY)) {
+    if (currentUrl.searchParams.get(StatsigABHelper._redirKey)) {
       StatsigABHelper.resetBody();
       return;
     }
@@ -97,7 +97,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
       StatsigABHelper.setupStatsigSdk(apiKey);
       return;
     }
-    newUrl.searchParams.set(STATSIG_NO_REDIR_KEY, 1);
+    newUrl.searchParams.set(StatsigABHelper._redirKey, 1);
     window.location.replace(newUrl.href);
   },
 
