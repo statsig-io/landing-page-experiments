@@ -41,6 +41,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
           },
           custom: {
             url: window.location.href,
+            page_url: window.location.href,
             language: window.navigator.language,
           },
         },
