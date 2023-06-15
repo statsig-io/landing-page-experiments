@@ -1,3 +1,4 @@
+STATSIG_NO_REDIR_KEY = '_stsgnoredir';
 window["StatsigABHelper"] = window["StatsigABHelper"] || {
   addStatsigSdk: function(apiKey, nonce) {
     const script = document.createElement('script');
@@ -37,7 +38,11 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
           userID: sid,
           customIDs: {
             stableID: sid,
-          }
+          },
+          custom: {
+            url: window.location.href,
+            language: window.navigator.language,
+          },
         },
         configName: experimentId,
       }),
@@ -49,11 +54,19 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
   },
 
   performRedirect: function(apiKey, experimentId, nonce) {
+    const currentUrl = new URL(window.location.href);
+
+    // Force no redir
+    if (currentUrl.searchParams.get(STATSIG_NO_REDIR_KEY)) {
+      StatsigABHelper.resetBody();
+      return;
+    }
+
     this.getExperimentConfig(apiKey, experimentId)
       .then(config => {
         const url = config?.value?.page_url;
         if (url) {
-          this.redirectToUrl(apiKey, url, nonce);
+          StatsigABHelper.redirectToUrl(apiKey, url, nonce);
           return;
         } else {
           // Could be in pre-start mode
@@ -71,13 +84,20 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
   redirectToUrl: function(apiKey, url) {
     const currentUrl = new URL(window.location.href);
     const newUrl = new URL(url, window.location.href);
-    if (currentUrl.pathname === newUrl.pathname) {
+
+    let cp = currentUrl.pathname;
+    cp = cp.endsWith('/') ? cp.substring(0, cp.length - 1) : cp;
+    let np = newUrl.pathname;
+    np = np.endsWith('/') ? np.substring(0, np.length - 1) : np;
+      
+    if (cp === np) {
       StatsigABHelper._redirectFinished = true;
       StatsigABHelper.resetBody();
       StatsigABHelper.setupStatsigSdk(apiKey);
       return;
     }
-    window.location.replace(url);
+    newUrl.searchParams.set(STATSIG_NO_REDIR_KEY, 1);
+    window.location.replace(newUrl.href);
   },
 
   resetBody: function() {
