@@ -97,6 +97,12 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
       StatsigABHelper.setupStatsigSdk(apiKey);
       return;
     }
+    currentUrl.searchParams.forEach((value, key) => {
+      // Only set search params that don't already exist
+      if (!newUrl.searchParams.get(key)) {
+        newUrl.searchParams.set(key, value);
+      }
+    });
     newUrl.searchParams.set(StatsigABHelper._redirKey, 1);
     window.location.replace(newUrl.href);
   },
