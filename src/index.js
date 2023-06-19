@@ -25,9 +25,13 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
     return sid;
   },
 
-  getExperimentConfig: async function(apiKey, experimentId) {
+  getExperimentConfig: async function(apiKey, experimentId, layerId) {
     const sid = this.getStableID();
-    const resp = await fetch('https://featuregates.org/v1/get_config', {
+    let url = 'https://featuregates.org/v1/get_config';
+    if (layerId) {
+      url = 'https://featuregates.org/v1/get_layer';
+    }
+    const resp = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -46,6 +50,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
           },
         },
         configName: experimentId,
+        layerName: layerId,
       }),
     });
 
@@ -54,7 +59,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
     }
   },
 
-  performRedirect: function(apiKey, experimentId, nonce) {
+  performRedirect: function(apiKey, experimentId, layerId) {
     const currentUrl = new URL(window.location.href);
 
     // Force no redir
@@ -63,11 +68,11 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
       return;
     }
 
-    this.getExperimentConfig(apiKey, experimentId)
+    this.getExperimentConfig(apiKey, experimentId, layerId)
       .then(config => {
         const url = config?.value?.page_url;
         if (url) {
-          StatsigABHelper.redirectToUrl(apiKey, url, nonce);
+          StatsigABHelper.redirectToUrl(apiKey, url);
           return;
         } else {
           // Could be in pre-start mode
@@ -131,9 +136,10 @@ if (document.currentScript && document.currentScript.src) {
   const url = new URL(document.currentScript.src);
   const apiKey = url.searchParams.get('apikey');
   const expId = url.searchParams.get('expid');
-  if (apiKey && expId) {
+  const layerId = url.searchParams.get('layerid');
+  if (apiKey && (expId || layerId)) {
     document.write('<style id="__sbpd">body { display: none; }</style>\n');
     StatsigABHelper.addStatsigSdk(apiKey, document.currentScript.nonce);
-    StatsigABHelper.performRedirect(apiKey, expId);
+    StatsigABHelper.performRedirect(apiKey, expId, layerId);
   }
 }
