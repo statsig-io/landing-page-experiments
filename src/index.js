@@ -97,7 +97,6 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
     np = np.endsWith('/') ? np.substring(0, np.length - 1) : np;
       
     if (cp === np) {
-      StatsigABHelper._redirectFinished = true;
       StatsigABHelper.resetBody();
       StatsigABHelper.setupStatsigSdk(apiKey);
       return;
@@ -113,6 +112,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
   },
 
   resetBody: function() {
+    StatsigABHelper._redirectFinished = true;
     const sbpd = document.getElementById('__sbpd');
     if (sbpd) {
       sbpd.parentElement.removeChild(sbpd);
