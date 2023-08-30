@@ -44,11 +44,11 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
   },
 
   getOneExperimentConfig: async function(apiKey, experimentId, layerId) {
-    const sid = this.getStableID();
     let url = 'https://featuregates.org/v1/get_config';
     if (layerId) {
       url = 'https://featuregates.org/v1/get_layer';
     }
+    const user = this.getStatsigUser();
     const resp = await fetch(url, {
       method: 'POST',
       headers: {
@@ -56,17 +56,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
         'statsig-api-key': apiKey,
       },
       body: JSON.stringify({
-        user: {
-          userID: sid,
-          customIDs: {
-            stableID: sid,
-          },
-          custom: {
-            url: window.location.href,
-            page_url: window.location.href,
-            language: window.navigator.language,
-          },
-        },
+        user,
         configName: experimentId,
         layerName: layerId,
       }),
@@ -75,6 +65,21 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
     if (resp.ok) {
       return await resp.json();
     }
+  },
+
+  getStatsigUser: function() {
+    const sid = this.getStableID();
+    return {
+      userID: sid,
+      customIDs: {
+        stableID: sid,
+      },
+      custom: {
+        url: window.location.href,
+        page_url: window.location.href,
+        language: window.navigator.language,
+      },
+    };
   },
 
   performRedirect: function(apiKey, expIds, layerId = null) {
@@ -145,7 +150,8 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
       return;
     }
     if (!window.statsig.instance) {
-      statsig.initialize(apiKey, {});
+      const user = this.getStatsigUser();
+      statsig.initialize(apiKey, user);
     }
   },
 }
