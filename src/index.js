@@ -1,5 +1,10 @@
 window["StatsigABHelper"] = window["StatsigABHelper"] || {
   _redirKey: '_stsgnoredir',
+  _fallbackRuleIDs: [
+    'targetingGate',
+    'layerAssignment',
+    'prestart',
+  ],
   addStatsigSdk: function(apiKey, nonce) {
     const script = document.createElement('script');
     if (nonce) {
@@ -25,7 +30,20 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
     return sid;
   },
 
-  getExperimentConfig: async function(apiKey, experimentId, layerId) {
+  getExperimentConfigWithFallback: async function(apiKey, expIds, layerId) {
+    if (expIds && expIds.length > 0) {
+      for (let ii = 0; ii < expIds.length; ii++) {
+        const config = await this.getOneExperimentConfig(apiKey, expIds[ii]);
+        if (config && !this._fallbackRuleIDs.includes(config.rule_id)) {
+          return config;
+        }
+      }
+    } else {
+      return await this.getOneExperimentConfig(apiKey, null, layerId);
+    }
+  },
+
+  getOneExperimentConfig: async function(apiKey, experimentId, layerId) {
     const sid = this.getStableID();
     let url = 'https://featuregates.org/v1/get_config';
     if (layerId) {
@@ -59,7 +77,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
     }
   },
 
-  performRedirect: function(apiKey, experimentId, layerId) {
+  performRedirect: function(apiKey, expIds, layerId = null) {
     const currentUrl = new URL(window.location.href);
 
     // Force no redir
@@ -68,7 +86,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
       return;
     }
 
-    this.getExperimentConfig(apiKey, experimentId, layerId)
+    this.getExperimentConfigWithFallback(apiKey, expIds, layerId)
       .then(config => {
         const url = config?.value?.page_url;
         if (url) {
@@ -136,10 +154,18 @@ if (document.currentScript && document.currentScript.src) {
   const url = new URL(document.currentScript.src);
   const apiKey = url.searchParams.get('apikey');
   const expId = url.searchParams.get('expid');
+  const multiExpIds = url.searchParams.get('multiexpids')
   const layerId = url.searchParams.get('layerid');
-  if (apiKey && (expId || layerId)) {
+  if (apiKey && (expId || layerId || multiExpIds)) {
     document.write('<style id="__sbpd">body { display: none; }</style>\n');
     StatsigABHelper.addStatsigSdk(apiKey, document.currentScript.nonce);
-    StatsigABHelper.performRedirect(apiKey, expId, layerId);
+    if (layerId) {
+      StatsigABHelper.performRedirect(apiKey, null, layerId);
+    } else if (multiExpIds) {
+      const expIds = multiExpIds.split(',');
+      StatsigABHelper.performRedirect(apiKey, expIds);
+    } else {
+      StatsigABHelper.performRedirect(apiKey, [expId]);
+    }
   }
 }
