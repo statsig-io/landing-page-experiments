@@ -1,5 +1,6 @@
 window["StatsigABHelper"] = window["StatsigABHelper"] || {
   _redirKey: '_stsgnoredir',
+  _configNameKey: '_configname',
   _fallbackRuleIDs: [
     'targetingGate',
     'layerAssignment',
@@ -95,7 +96,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
       .then(config => {
         const url = config?.value?.page_url;
         if (url) {
-          StatsigABHelper.redirectToUrl(apiKey, url);
+          StatsigABHelper.redirectToUrl(apiKey, url, config.name);
           return;
         } else {
           // Could be in pre-start mode
@@ -110,7 +111,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
       });      
   },
 
-  redirectToUrl: function(apiKey, url) {
+  redirectToUrl: function(apiKey, url, configName) {
     const currentUrl = new URL(window.location.href);
     const newUrl = new URL(url, window.location.href);
 
@@ -131,6 +132,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
       }
     });
     newUrl.searchParams.set(StatsigABHelper._redirKey, 1);
+    newUrl.searchParams.set(StatsigABHelper._configNameKey, configName);
     window.location.replace(newUrl.href);
   },
 
