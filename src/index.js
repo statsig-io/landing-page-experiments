@@ -96,7 +96,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
       .then(config => {
         const url = config?.value?.page_url;
         if (url) {
-          StatsigABHelper.redirectToUrl(apiKey, url, config.name);
+          StatsigABHelper.redirectToUrl(apiKey, url, config);
           return;
         } else {
           // Could be in pre-start mode
@@ -111,7 +111,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
       });      
   },
 
-  redirectToUrl: function(apiKey, url, configName) {
+  redirectToUrl: function(apiKey, url, config) {
     const currentUrl = new URL(window.location.href);
     const newUrl = new URL(url, window.location.href);
 
@@ -132,7 +132,13 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
       }
     });
     newUrl.searchParams.set(StatsigABHelper._redirKey, 1);
-    newUrl.searchParams.set(StatsigABHelper._configNameKey, configName);
+    const excludeConfigNameInUrl = config?.value?.excludeConfigNameInUrl;
+    if (!excludeConfigNameInUrl) {
+      newUrl.searchParams.set(
+        StatsigABHelper._configNameKey,
+        config?.name ?? '',
+      );
+    }
     window.location.replace(newUrl.href);
   },
 
