@@ -19,6 +19,26 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
     document.head.appendChild(script);
   },
 
+  constructFullRedirectUrl: function(url) {
+    const currentUrl = new URL(window.location.href);
+    let newUrl = new URL(url, window.location.href);
+    if (url.startsWith('+')) {
+      const cp = currentUrl.pathname;
+      newUrl = new URL(
+        (cp.endsWith('/') ? cp.slice(0, -1) : cp) + url.substring(1),
+        window.location.href
+      );
+    }
+    currentUrl.searchParams.forEach((value, key) => {
+      // Only set search params that don't already exist
+      if (!newUrl.searchParams.get(key)) {
+        newUrl.searchParams.set(key, value);
+      }
+    });
+    newUrl.searchParams.set(StatsigABHelper._redirKey, 1);
+    return newUrl;
+  },
+
   getStableID: function() {
     const key = 'STATSIG_LOCAL_STORAGE_STABLE_ID';
     let sid = window.localStorage ? window.localStorage.getItem(key) : null;
@@ -113,25 +133,21 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
 
   redirectToUrl: function(apiKey, url, config) {
     const currentUrl = new URL(window.location.href);
-    const newUrl = new URL(url, window.location.href);
+    const newUrl = this.constructFullRedirectUrl(url);
 
-    let cp = currentUrl.pathname;
-    cp = cp.endsWith('/') ? cp.substring(0, cp.length - 1) : cp;
-    let np = newUrl.pathname;
-    np = np.endsWith('/') ? np.substring(0, np.length - 1) : np;
-      
-    if (cp === np) {
-      StatsigABHelper.resetBody();
-      StatsigABHelper.setupStatsigSdk(apiKey);
-      return;
-    }
-    currentUrl.searchParams.forEach((value, key) => {
-      // Only set search params that don't already exist
-      if (!newUrl.searchParams.get(key)) {
-        newUrl.searchParams.set(key, value);
+    if (currentUrl.origin === newUrl.origin) {
+      let cp = currentUrl.pathname;
+      cp = cp.endsWith('/') ? cp.substring(0, cp.length - 1) : cp;
+      let np = newUrl.pathname;
+      np = np.endsWith('/') ? np.substring(0, np.length - 1) : np;
+        
+      if (cp === np) {
+        StatsigABHelper.resetBody();
+        StatsigABHelper.setupStatsigSdk(apiKey);
+        return;
       }
-    });
-    newUrl.searchParams.set(StatsigABHelper._redirKey, 1);
+    }
+    
     const excludeConfigNameInUrl = config?.value?.excludeConfigNameInUrl;
     if (!excludeConfigNameInUrl) {
       newUrl.searchParams.set(
