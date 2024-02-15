@@ -91,7 +91,6 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
   getStatsigUser: function() {
     const sid = this.getStableID();
     return {
-      userID: sid,
       customIDs: {
         stableID: sid,
       },
