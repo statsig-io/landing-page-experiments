@@ -1,6 +1,7 @@
 window["StatsigABHelper"] = window["StatsigABHelper"] || {
   _redirKey: '_stsgnoredir',
   _configNameKey: '_configname',
+  _strictId: 'strictid',
   _fallbackRuleIDs: [
     'targetingGate',
     'layerAssignment',
@@ -90,8 +91,9 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
 
   getStatsigUser: function() {
     const sid = this.getStableID();
-    return {
-      userID: sid,
+    const currentUrl = new URL(window.location.href);
+    const useStrictId = currentUrl.searchParams.get(this._strictId);
+    const user = {
       customIDs: {
         stableID: sid,
       },
@@ -101,6 +103,10 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
         language: window.navigator.language,
       },
     };
+    if (!useStrictId) {
+      user.userID = sid;
+    }
+    return user;
   },
 
   performRedirect: function(apiKey, expIds, layerId = null) {
