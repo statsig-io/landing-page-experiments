@@ -1,7 +1,6 @@
 window["StatsigABHelper"] = window["StatsigABHelper"] || {
   _redirKey: '_stsgnoredir',
   _configNameKey: '_configname',
-  _strictId: 'strictid',
   _fallbackRuleIDs: [
     'targetingGate',
     'layerAssignment',
@@ -91,8 +90,6 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
 
   getStatsigUser: function() {
     const sid = this.getStableID();
-    const currentUrl = new URL(window.location.href);
-    const useStrictId = currentUrl.searchParams.get(this._strictId);
     const user = {
       customIDs: {
         stableID: sid,
@@ -103,7 +100,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
         language: window.navigator.language,
       },
     };
-    if (!useStrictId) {
+    if (!this.useStrictId) {
       user.userID = sid;
     }
     return user;
@@ -190,8 +187,9 @@ if (document.currentScript && document.currentScript.src) {
   const url = new URL(document.currentScript.src);
   const apiKey = url.searchParams.get('apikey');
   const expId = url.searchParams.get('expid');
-  const multiExpIds = url.searchParams.get('multiexpids')
+  const multiExpIds = url.searchParams.get('multiexpids');
   const layerId = url.searchParams.get('layerid');
+  StatsigABHelper.useStrictId = url.searchParams.get('strictid');
   if (apiKey && (expId || layerId || multiExpIds)) {
     document.write('<style id="__sbpd">body { display: none; }</style>\n');
     StatsigABHelper.addStatsigSdk(apiKey, document.currentScript.nonce);
