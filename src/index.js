@@ -90,6 +90,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
 
   getStatsigUser: function() {
     const sid = this.getStableID();
+    const additionalCustom = window._customUserProperties || {};
     const user = {
       customIDs: {
         stableID: sid,
@@ -98,6 +99,7 @@ window["StatsigABHelper"] = window["StatsigABHelper"] || {
         url: window.location.href,
         page_url: window.location.href,
         language: window.navigator.language,
+        ...additionalCustom,
       },
     };
     if (!this.useStrictId) {
